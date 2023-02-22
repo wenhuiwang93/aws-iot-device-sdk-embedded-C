@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -141,7 +141,7 @@ static OpensslParams_t opensslParams;
 /**
  * @brief The transport layer interface used by the HTTP Client library.
  */
-static TransportInterface_t transportInterface;
+static TransportInterface_t transportInterface = { 0 };
 
 /**
  * @brief Represents the hostname and port of the broker.

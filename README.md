@@ -20,6 +20,7 @@
     * [Sending metrics to AWS IoT](#sending-metrics-to-aws-iot)
 * [Versioning](#versioning)
 * [Releases and Documentation](#releases-and-documentation)
+    * [202211.00](#20210800)
     * [202108.00](#20210800)
     * [202103.00](#20210300)
     * [202012.01](#20201201)
@@ -50,6 +51,7 @@
         * [Configuring the AWS IoT Fleet Provisioning demo](#configuring-the-aws-iot-fleet-provisioning-demo)
         * [Configuring the S3 demos](#configuring-the-s3-demos)
         * [Setup for AWS IoT Jobs demo](#setup-for-aws-iot-jobs-demo)
+        * [Setup for the Greengrass local auth demo](#setup-for-the-greengrass-local-auth-demo)
         * [Prerequisites for the AWS Over-The-Air Update (OTA) demos](#prerequisites-for-the-aws-over-the-air-update-ota-demos)
         * [Scheduling an OTA Update Job](#scheduling-an-ota-update-job)
     * [Building and Running Demos](#building-and-running-demos)
@@ -59,7 +61,6 @@
         * [Alternative option of Docker containers for running demos locally](#alternative-option-of-docker-containers-for-running-demos-locally)
             * [Installing Mosquitto to run MQTT demos locally](#installing-mosquitto-to-run-mqtt-demos-locally)
             * [Installing httpbin to run HTTP demos locally](#installing-httpbin-to-run-http-demos-locally)
-    * [Installation](#installation)
 * [Generating Documentation](#generating-documentation)
 
 ## Overview
@@ -68,7 +69,7 @@ The AWS IoT Device SDK for Embedded C (C-SDK) is a collection of C source files 
 
 For the latest release of C-SDK, please see the section for [Releases and Documentation](#releases-and-documentation).
 
-**C-SDK includes libraries that are part of the [FreeRTOS 202012.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202012.01-LTS) release. Learn more about the FreeRTOS 202012.01 LTS libraries by [clicking here](https://freertos.org/lts-libraries.html).**
+**C-SDK includes libraries that are part of the [FreeRTOS 202210.01 LTS](https://github.com/FreeRTOS/FreeRTOS-LTS/tree/202210.01-LTS) release. Learn more about the FreeRTOS 202210.01 LTS libraries by [clicking here](https://freertos.org/lts-libraries.html).**
 
 ### License
 
@@ -82,19 +83,19 @@ C-SDK simplifies access to various AWS IoT services. C-SDK has been tested to wo
 
 The [coreMQTT](https://github.com/FreeRTOS/coreMQTT) library provides the ability to establish an MQTT connection with a broker over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. This MQTT connection can be used for performing publish operations to MQTT topics and subscribing to MQTT topics. The library provides a mechanism to register customer-defined callbacks for receiving incoming PUBLISH, acknowledgement and keep-alive response events from the broker. The library has been refactored for memory optimization and is compliant with the [MQTT 3.1.1](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/mqtt-v3.1.1.html) standard. It has no dependencies on any additional libraries other than the standard C library, a customer-implemented network transport interface, and optionally a customer-implemented platform time function. The refactored design embraces different use-cases, ranging from resource-constrained platforms using only QoS 0 MQTT PUBLISH messages to resource-rich platforms using QoS 2 MQTT PUBLISH over TLS connections.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/index.html#mqtt_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/coreMQTT/docs/doxygen/output/html/index.html#mqtt_memory_requirements).
 
 #### coreHTTP
 
 The [coreHTTP](https://github.com/FreeRTOS/coreHTTP) library provides the ability to establish an HTTP connection with a server over a customer-implemented transport layer, which can either be a secure channel like a TLS session (mutually authenticated or server-only authentication) or a non-secure channel like a plaintext TCP connection. The HTTP connection can be used to make "GET" (include range requests), "PUT", "POST" and "HEAD" requests. The library provides a mechanism to register a customer-defined callback for receiving parsed header fields in an HTTP response. The library has been refactored for memory optimization, and is a client implementation of a subset of the [HTTP/1.1](https://tools.ietf.org/html/rfc2616) standard.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/index.html#http_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/coreHTTP/docs/doxygen/output/html/index.html#http_memory_requirements).
 
 #### coreJSON
 
 The [coreJSON](https://github.com/FreeRTOS/coreJSON) library is a JSON parser that strictly enforces the [ECMA-404 JSON standard](https://www.json.org/json-en.html). It provides a function to validate a JSON document, and a function to search for a key and return its value. A search can descend into nested structures using a compound query key. A JSON document validation also checks for illegal UTF8 encodings and illegal Unicode escape sequences.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/coreJSON/docs/doxygen/output/html/index.html#json_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/coreJSON/docs/doxygen/output/html/index.html#json_memory_requirements).
 
 #### corePKCS11
 
@@ -110,7 +111,7 @@ The purpose of corePKCS11 mock is therefore to provide a PKCS #11 implementation
 Since the PKCS #11 interface is defined as part of the PKCS #11 [specification](https://docs.oasis-open.org/pkcs11/pkcs11-base/v2.40/os/pkcs11-base-v2.40-os.html) replacing corePKCS11 with another implementation 
 should require little porting effort, as the interface will not change. The system tests distributed in corePKCS11 repository can be leveraged to verify the behavior of a different implementation is similar to corePKCS11.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/corePKCS11/docs/doxygen/output/html/pkcs11_design.html#pkcs11_memory_requirements).
 
 #### AWS IoT Device Shadow
 
@@ -118,7 +119,7 @@ The AWS IoT Device Shadow library enables you to store and retrieve the current 
 
 The AWS IoT Device Shadow library has no dependencies on additional libraries other than the standard C library. It also doesn’t have any platform dependencies, such as threading or synchronization. It can be used with any MQTT library and any JSON library (see [demos](demos/shadow) with coreMQTT and coreJSON).
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#shadow_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#shadow_memory_requirements).
 
 
 #### AWS IoT Jobs
@@ -127,7 +128,7 @@ The [AWS IoT Jobs](https://github.com/aws/jobs-for-aws-iot-embedded-sdk) library
 
 The AWS IoT Jobs library has no dependencies on additional libraries other than the standard C library. It also doesn’t have any platform dependencies, such as threading or synchronization. It can be used with any MQTT library and any JSON library (see [demos](demos/jobs) with [libmosquitto](https://mosquitto.org/) and coreJSON).
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#jobs_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/jobs-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#jobs_memory_requirements).
 
 
 #### AWS IoT Device Defender
@@ -136,7 +137,7 @@ The [AWS IoT Device Defender](https://github.com/aws/device-defender-for-aws-iot
 
 The AWS IoT Device Defender library has no dependencies on additional libraries other than the standard C library. It also doesn’t have any platform dependencies, such as threading or synchronization. It can be used with any MQTT library and any JSON library (see [demos](demos/defender) with coreMQTT and coreJSON).
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#defender_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#defender_memory_requirements).
 
 #### AWS IoT Over-the-air Update
 
@@ -144,19 +145,19 @@ The [AWS IoT Over-the-air Update](https://github.com/aws/ota-for-aws-iot-embedde
 
 The AWS IoT Over-the-air Update library has a dependency on [coreJSON](https://github.com/FreeRTOS/coreJSON) for parsing of JSON job document and [tinyCBOR](https://github.com/intel/tinycbor.git) for decoding encoded data streams, other than the standard C library. It can be used with any MQTT library, HTTP library, and operating system (e.g. Linux, FreeRTOS) (see [demos](demos/ota) with coreMQTT and coreHTTP over Linux).
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#ota_memory_requirements).
 
 #### AWS IoT Fleet Provisioning
 
 The [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library enables you to interact with the [AWS IoT Fleet Provisioning MQTT APIs](https://docs.aws.amazon.com/iot/latest/developerguide/fleet-provision-api.html) in order to provison IoT devices without preexisting device certificates. With AWS IoT Fleet Provisioning, devices can securely receive unique device certificates from AWS IoT when they connect for the first time. For an overview of all provisioning options offered by AWS IoT, see [device provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/iot-provision.html). For details about Fleet Provisioning, refer to the [AWS IoT Fleet Provisioning documentation](https://docs.aws.amazon.com/iot/latest/developerguide/provision-wo-cert.html).
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#fleet_provisioning_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/fleet-provisioning-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#fleet_provisioning_memory_requirements).
 
 #### AWS SigV4
 
 The [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library enables you to sign HTTP requests with [Signature Version 4 Signing Process](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html). Signature Version 4 (SigV4) is the process to add authentication information to HTTP requests to AWS services. For security, most requests to AWS must be signed with an access key. The access key consists of an access key ID and secret access key.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#sigv4_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/sigv4-for-aws-iot-embedded-sdk/docs/doxygen/output/html/index.html#sigv4_memory_requirements).
 
 #### backoffAlgorithm
 
@@ -166,7 +167,7 @@ Exponential backoff with jitter is typically used when retrying a failed connect
 
 The backoffAlgorithm library has no dependencies on libraries other than the standard C library.
 
-See memory requirements for the latest release [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/backoffAlgorithm/docs/doxygen/output/html/index.html#backoff_algorithm_memory_requirements).
+See memory requirements for the latest release [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/backoffAlgorithm/docs/doxygen/output/html/index.html#backoff_algorithm_memory_requirements).
 
 ### Sending metrics to AWS IoT
 
@@ -227,9 +228,16 @@ For example, a second release in June 2021 would be 202106.01. Although the SDK 
 
 All of the released versions of the C-SDK libraries are available as git tags. For example, the last release of the v3 SDK version is available at [tag 3.1.2](https://github.com/aws/aws-iot-device-sdk-embedded-C/tree/v3.1.2).
 
+### 202211.00
+[API documentation of 202211.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/index.html)
+
+This release includes an update to how the [Coverity static analysis](https://scan.coverity.com/) scans are performed. There is now a **tools/coverity/README.md** file in each library with instructions on how to perform a scan with 0 [MISRA coding standard](https://www.misra.org.uk) warnings or errors.
+
+Additionally, this release brings in major version upgrades to [coreMQTT](https://github.com/FreeRTOS/coreMQTT) and [coreHTTP](https://github.com/FreeRTOS/coreHTTP). It also brings in minor version upgrades to all other libraries.
+
 ### 202108.00
 
-[API documentation of 202108.00 release](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/index.html)
+[API documentation of 202108.00 release](https://aws.github.io/aws-iot-device-sdk-embedded-C/202108.00/index.html)
 
 This release introduces the refactored [AWS IoT Fleet Provisioning](https://github.com/aws/fleet-provisioning-for-aws-iot-embedded-sdk) library and the new [AWS SigV4](https://github.com/aws/SigV4-for-AWS-IoT-embedded-sdk) library.
 
@@ -275,23 +283,23 @@ All libraries depend on the ISO C90 standard library and additionally on the `st
 
 ### Porting coreMQTT
 
-Guide for porting coreMQTT library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt_porting.html).
+Guide for porting coreMQTT library to your platform is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/coreMQTT/docs/doxygen/output/html/mqtt_porting.html).
 
 ### Porting coreHTTP
 
-Guide for porting coreHTTP library is available [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/standard/coreHTTP/docs/doxygen/output/html/http_porting.html).
+Guide for porting coreHTTP library is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/standard/coreHTTP/docs/doxygen/output/html/http_porting.html).
 
 ### Porting AWS IoT Device Shadow
 
-Guide for porting AWS IoT Device Shadow library is available [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/shadow_porting.html).
+Guide for porting AWS IoT Device Shadow library is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-shadow-for-aws-iot-embedded-sdk/docs/doxygen/output/html/shadow_porting.html).
 
 ### Porting AWS IoT Device Defender
 
-Guide for porting AWS IoT Device Defender library is available [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
+Guide for porting AWS IoT Device Defender library is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/device-defender-for-aws-iot-embedded-sdk/docs/doxygen/output/html/defender_porting.html).
 
 ### Porting AWS IoT Over-the-air Update
 
-Guide for porting OTA library to your platform is available [here](https://docs.aws.amazon.com/embedded-csdk/202108.00/lib-ref/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
+Guide for porting OTA library to your platform is available [here](https://aws.github.io/aws-iot-device-sdk-embedded-C/202211.00/libraries/aws/ota-for-aws-iot-embedded-sdk/docs/doxygen/output/html/ota_porting.html).
 
 ## Migration guide from v3.1.2 to 202009.00 and newer releases
 
@@ -353,7 +361,7 @@ The libraries in this SDK are not dependent on any operating system. However, th
 
 * CMake 3.2.0 or any newer version for utilizing the build system of the repository.
 * C90 compiler such as gcc
-    * Due to the use of mbedtls in corePKCS11, a C99 compiler is required if building the PKCS11 demos or the CMake [install target](#installation).
+    * Due to the use of mbedtls in corePKCS11, a C99 compiler is required if building the PKCS11 demos.
 * Although not a part of the ISO C90 standard, `stdint.h` is required for fixed-width integer types that include `uint8_t`, `int8_t`, `uint16_t`, `uint32_t` and `int32_t`, and constant macros like `UINT16_MAX`, while `stdbool.h` is required for boolean parameters in coreMQTT. For compilers that do not provide these header files, [coreMQTT](https://github.com/FreeRTOS/coreMQTT) provides the files [stdint.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdint.readme) and [stdbool.readme](https://github.com/FreeRTOS/coreMQTT/blob/main/source/include/stdbool.readme), which can be renamed to `stdint.h` and `stdbool.h`, respectively, to provide the required type definitions.
 * A supported operating system. The ports provided with this repo are expected to work with all recent versions of the following operating systems, although we cannot guarantee the behavior on all systems.
     * Linux system with POSIX sockets, threads, RT, and timer APIs. (We have tested on Ubuntu 18.04).
@@ -491,6 +499,9 @@ The following creates a job that specifies a Linux Kernel link for downloading.
         --document '{"url":"https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.8.5.tar.xz"}'
 ```
 
+#### Setup for the Greengrass local auth demo
+
+For setting up the Greengrass local auth demo, see [the README in the demo folder](./demos/greengrass/greengrass_demo_local_auth/README.md).
 
 #### Prerequisites for the AWS Over-The-Air Update (OTA) demos
    
@@ -660,71 +671,6 @@ To run `http_demo_basic_tls`, [download ngrok](https://ngrok.com/download) in or
 Set `SERVER_HOST` in `demos/http/http_demo_basic_tls/demo_config.h` to the https link provided by ngrok, without `https://` preceding it.
 
 You must also download the Root CA certificate provided by the ngrok https link and set `ROOT_CA_CERT_PATH` in `demos/http/http_demo_basic_tls/demo_config.h` to the file path of the downloaded certificate.
-
-### Installation
-
-The C-SDK libraries and platform abstractions can be installed to a file system
-through CMake. To do so, run the following command in the root directory of the C-SDK.
-Note that installation is not required to run any of the demos.
-```sh
-cmake -S . -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0
-cd build
-sudo make install
-```
-Note that because `make install` will automatically build the `all` target, it may
-be useful to disable building demos and tests with `-DBUILD_DEMOS=0 -DBUILD_TESTS=0`
-unless they have already been configured. Super-user permissions may be needed if
-installing to a system include or system library path.
-
-To install only a subset of all libraries, pass `-DINSTALL_LIBS` to install only
-the libraries you need. By default, all libraries will be installed, but you may
-exclude any library that you don't need from this list:
-```
--DINSTALL_LIBS="DEFENDER;SHADOW;JOBS;OTA;OTA_HTTP;OTA_MQTT;BACKOFF_ALGORITHM;HTTP;JSON;MQTT;PKCS"
-```
-
-By default, the install path will be in the `project` directory of the SDK.
-You can also set `-DINSTALL_TO_SYSTEM=1` to install to the system path for
-headers and libraries in your OS (e.g. `/usr/local/include` & `/usr/local/lib` for Linux).
-
-Upon entering `make install`, the location of each library will be specified first
-followed by the location of all installed headers:
-```
--- Installing: /usr/local/lib/libaws_iot_defender.so
--- Installing: /usr/local/lib/libaws_iot_shadow.so
-...
--- Installing: /usr/local/include/aws/defender.h
--- Installing: /usr/local/include/aws/defender_config_defaults.h
--- Installing: /usr/local/include/aws/shadow.h
--- Installing: /usr/local/include/aws/shadow_config_defaults.h
-```
-
-You may also set an installation path of your choice by passing the
-following flags through CMake. Make sure to run the following command in the root directory of the C-SDK:
-```sh
-cmake -S . -Bbuild -DBUILD_DEMOS=0 -DBUILD_TESTS=0 \
--DCSDK_HEADER_INSTALL_PATH="/header/path" -DCSDK_LIB_INSTALL_PATH="/lib/path"
-cd build
-sudo make install
-```
-
-POSIX platform abstractions are used together with the C-SDK libraries in the demos.
-By default, these abstractions are also installed but can be excluded by passing
-the flag: `-DINSTALL_PLATFORM_ABSTRACTIONS=0`.
-
-Lastly, a custom config path for any specific library can also be specified through the following CMake flags, allowing
-libraries to be compiled with a config of your choice:
-```
--DDEFENDER_CUSTOM_CONFIG_DIR="defender-config-directory"
--DSHADOW_CUSTOM_CONFIG_DIR="shadow-config-directory"
--DJOBS_CUSTOM_CONFIG_DIR="jobs-config-directory"
--DOTA_CUSTOM_CONFIG_DIR="ota-config-directory"
--DHTTP_CUSTOM_CONFIG_DIR="http-config-directory"
--DJSON_CUSTOM_CONFIG_DIR="json-config-directory"
--DMQTT_CUSTOM_CONFIG_DIR="mqtt-config-directory"
--DPKCS_CUSTOM_CONFIG_DIR="pkcs-config-directory"
-```
-Note that the file name of the header should not be included in the directory.
 
 ## Generating Documentation
 Note: For pre-generated documentation, please visit [Releases and Documentation](#releases-and-documentation) section.

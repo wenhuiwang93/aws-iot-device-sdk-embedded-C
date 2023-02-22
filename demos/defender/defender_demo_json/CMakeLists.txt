@@ -34,6 +34,7 @@ target_include_directories( ${DEMO_NAME} PUBLIC
                             ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
                             ${JSON_INCLUDE_PUBLIC_DIRS}
                             ${DEFENDER_INCLUDE_PUBLIC_DIRS}
+                            ${AWS_DEMO_INCLUDE_DIRS}
                             ${CMAKE_CURRENT_LIST_DIR} )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
@@ -44,8 +45,6 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "CLIENT_PRIVATE_KEY_PATH"
                         "THING_NAME"
                         "CLIENT_IDENTIFIER"
-                        "CLIENT_USERNAME"
-                        "CLIENT_PASSWORD"
                         "OS_NAME"
                         "OS_VERSION"
                         "HARDWARE_PLATFORM_NAME")

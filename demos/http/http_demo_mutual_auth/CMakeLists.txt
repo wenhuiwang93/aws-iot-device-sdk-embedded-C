@@ -10,6 +10,13 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorith
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
 file( GLOB DEMO_UTILS "${DEMOS_DIR}/http/common/src/*.c*" )
 
+# Disable some warnings for llhttp sources.
+set_source_files_properties(
+    ${HTTP_SOURCES}
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-unused-parameter"
+)
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
@@ -33,13 +40,13 @@ target_include_directories(
         "${DEMOS_DIR}/http/common/include"
         ${HTTP_INCLUDE_PUBLIC_DIRS}
         ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
-        ${CMAKE_CURRENT_LIST_DIR}
         ${LOGGING_INCLUDE_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
                       REQUIRED
-                        "SERVER_HOST"
                         "AWS_HTTPS_PORT"
                         "ROOT_CA_CERT_PATH")
 set_macro_definitions(TARGETS ${DEMO_NAME}

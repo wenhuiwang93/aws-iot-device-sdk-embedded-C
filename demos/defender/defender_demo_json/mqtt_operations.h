@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -100,6 +100,6 @@ bool PublishToTopic( const char * pTopic,
  * @return true if process loop was successful;
  * false otherwise.
  */
-bool ProcessLoop( uint32_t timemoutMs );
+bool ProcessLoopWithTimeout( uint32_t ulTimeoutMs );
 
 #endif /* ifndef MQTT_OPERATIONS_H_ */

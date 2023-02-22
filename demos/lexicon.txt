@@ -59,6 +59,8 @@ buffersize
 bytesread
 bytesreceived
 bytessent
+bytestorecv
+bytestosend
 bzero
 ca
 cacerts
@@ -67,6 +69,7 @@ cas
 cb
 cbc
 cbor
+cborprinter
 ccm
 ccs
 cdn
@@ -122,6 +125,7 @@ corejson
 coremqtt
 corepkcs
 correclty
+coverity
 cpu
 cpus
 cpuuserusagelength
@@ -146,6 +150,7 @@ ctr
 curbyte
 currentversion
 customisation
+cwd
 cybertrust
 dat
 datalength
@@ -215,10 +220,15 @@ exportpublickey
 extendedkeyusage
 familiy
 faqs
+fclose
+filepath
+filepaths
 filerc
 filesize
+filetype
 filterindex
 findobjects
+fmt
 fn
 fopen
 fpdemothings
@@ -240,6 +250,7 @@ genkey
 genprime
 genrsa
 getcertificatefromcsr
+getcwd
 getdeviceserialnumber
 getfunctionlist
 getslotlist
@@ -247,10 +258,12 @@ getsubackstatuscodes
 gettopicstring
 gf
 glibc
+globalackpacketidentifier
 globalsubackstatus
 globalsubscribepacketidentifier
 gmtime
 gpl
+greengrass
 grp
 hardclock
 hashlen
@@ -331,6 +344,7 @@ ll
 logdebug
 logerror
 loginfo
+logpath
 logwarn
 lu
 mac
@@ -360,17 +374,21 @@ metricscollectorfileopenfailed
 metricscollectorparsingfailed
 metricscollectorsuccess
 mfl
+mfln
 microcontroller
 milli
 min
 minorreportversion
 mis
+misra
 montgomery
+moquette
 mosquitto
 mpi
 mpis
 mq
 mqtt
+mqttcallback
 mqttcontext
 mqttkeepalivetimeout
 mqttprocessincomingpacket
@@ -515,9 +533,13 @@ pmsg
 pmsg
 pnetworkcontext
 policyname
+pollin
 pollinv
+pollpri
 poly
 popenportsarray
+popensslcredentials
+popensslparams
 portsarraylength
 posix
 potainterfaces
@@ -580,10 +602,12 @@ proc
 processloop
 procfs
 programname
+prootcapath
 proto
 prvobjectgeneration
 prvobjectimporting
 ps
+pserverinfo
 psessionpresent
 psig
 psiglen
@@ -591,6 +615,8 @@ psignature
 psk
 pslotlist
 pss
+pssl
+psslcontext
 pstartheaderloc
 pthingname
 pthingnamebuffer
@@ -631,6 +657,7 @@ rdparty
 readme
 reasonnable
 recv
+recvtimeoutms
 registerthing
 reportbuilderbadparameter
 reportbuilderbuffertoosmall
@@ -672,6 +699,7 @@ sec
 secp
 secretaccesskey
 seedfile
+sendtimeoutms
 sendupdate
 serialnumber
 serverhost
@@ -694,6 +722,7 @@ slotid
 smartcard
 sni
 snprintf
+socketstatus
 somewebsite
 sp
 spdx
@@ -747,6 +776,7 @@ totalmemory
 transportinterface
 transporttimeout
 trueobject
+tx
 txt
 ubuntu
 udbl
@@ -758,6 +788,8 @@ uldigestlength
 uloffset
 ulong
 ulslotcount
+ultimeout
+ultimeoutms
 un
 unescaping
 unix
@@ -775,6 +807,7 @@ usa
 usb
 userguide
 userspace
+uspacketidentifier
 util
 utils
 v1

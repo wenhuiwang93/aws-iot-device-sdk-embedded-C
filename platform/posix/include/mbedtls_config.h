@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -113,10 +113,6 @@
 #define MBEDTLS_FS_IO
 #define MBEDTLS_HAVE_TIME_DATE
 #define MBEDTLS_HAVE_TIME
-
-/* Include due to bug when building shared library:
- * See https://github.com/ARMmbed/mbedtls/issues/4411 */
-#define MBEDTLS_PSA_CRYPTO_C
 
 #include "mbedtls/check_config.h"
 

@@ -13,7 +13,7 @@ include( ${CMAKE_SOURCE_DIR}/libraries/aws/device-shadow-for-aws-iot-embedded-sd
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreJSON/jsonFilePaths.cmake )
 
 # CPP files are searched for supporting CI build checks that verify C++ linkage of the Device Shadow library
-file( GLOB DEMO_SRCS "*.c*" )
+file( GLOB DEMO_SRCS "shadow_demo_helpers.c" "*.c*" )
 
 # Demo target.
 add_executable(
@@ -40,8 +40,9 @@ target_include_directories(
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
         ${SHADOW_INCLUDE_PUBLIC_DIRS}
-        ${CMAKE_CURRENT_LIST_DIR}
         ${JSON_INCLUDE_PUBLIC_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
@@ -52,8 +53,6 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "CLIENT_PRIVATE_KEY_PATH"
                         "CLIENT_IDENTIFIER"
                         "THING_NAME"
-                        "CLIENT_USERNAME"
-                        "CLIENT_PASSWORD"
                         "OS_NAME"
                         "OS_VERSION"
                         "HARDWARE_PLATFORM_NAME")

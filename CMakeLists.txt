@@ -1,7 +1,7 @@
 # Project information.
 cmake_minimum_required( VERSION 3.2.0 )
 project( AwsIotDeviceSdkEmbeddedC
-         VERSION 202108.00
+         VERSION 202211.00
          LANGUAGES C CXX )
 
 # Allow the project to be organized into folders.
@@ -83,19 +83,6 @@ endif()
 if(BUILD_TESTS)
     enable_testing()
     include(${ROOT_DIR}/tools/cmock/cmock_dependencies.cmake)
-
-    # Create a list for each unit test target.
-    set(utest_targets
-        openssl_utest sockets_utest
-        plaintext_utest clock_utest ota_pal_posix_utest)
-
-    # Add a target for running coverage on tests.
-    add_custom_target(coverage
-        COMMAND ${CMAKE_COMMAND} -DROOT_DIR=${ROOT_DIR}
-        -P ${CMAKE_SOURCE_DIR}/tools/cmock/coverage.cmake
-        DEPENDS cmock unity ${utest_targets}
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
 endif()
 
 include(GNUInstallDirs)
@@ -123,6 +110,10 @@ else()
 endif()
 install(DIRECTORY DESTINATION ${CSDK_LIB_INSTALL_PATH})
 
+# Find thread library.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads)
+
 # Add libraries.
 add_subdirectory( libraries )
 
@@ -148,10 +139,12 @@ endif()
 
 if(DOWNLOAD_CERTS)
     if(BUILD_TESTS)
+    set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
         set(CERT_DOWNLOAD_DIR ${SYSTEM_TEST_DIR}/certificates)
     else()
         set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
     endif()
+    set(CERT_DOWNLOAD_DIR ${DEMOS_DIR}/certificates)
     file(MAKE_DIRECTORY ${CERT_DOWNLOAD_DIR})
     # Download the Amazon Root CA certificate.
     message( "Downloading the Amazon Root CA certificate..." )
@@ -159,15 +152,9 @@ if(DOWNLOAD_CERTS)
         COMMAND curl --url https://www.amazontrust.com/repository/AmazonRootCA1.pem
         -o ${CERT_DOWNLOAD_DIR}/AmazonRootCA1.crt
     )
-    # Download the Baltimore Cybertrust Root CA certificate.
-    message( "Downloading the Baltimore Cybertrust Root CA certificate..." )
-    execute_process(
-        COMMAND curl --url https://cacerts.digicert.com/BaltimoreCyberTrustRoot.crt.pem
-        -o ${CERT_DOWNLOAD_DIR}/BaltimoreCyberTrustRoot.crt
-    )
     # Copy certificates to the build directory.
     file(COPY "${CERT_DOWNLOAD_DIR}"
-         DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+      DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     if(BUILD_TESTS)
         file(COPY "${CERT_DOWNLOAD_DIR}"
              DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests)

@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -40,6 +40,9 @@
 /* OpenSSL transport header. */
 #include "openssl_posix.h"
 
+/* AWS IoT Core TLS ALPN definitions for MQTT authentication */
+#include "aws_iot_alpn_defs.h"
+
 /* Check that AWS IoT Core endpoint is defined. */
 #ifndef AWS_IOT_ENDPOINT
     #error "AWS_IOT_ENDPOINT must be defined to your AWS IoT Core endpoint."
@@ -69,17 +72,6 @@
 #ifndef CLIENT_PRIVATE_KEY_PATH
     #error "Please define a CLIENT_PRIVATE_KEY_PATH."
 #endif
-
-/**
- * @brief ALPN protocol name to be sent as part of the ClientHello message.
- *
- * @note When using ALPN, port 443 must be used to connect to AWS IoT Core.
- *
- * @note OpenSSL requires that the protocol string passed to it for configuration be encoded
- * with the prefix of 8-bit length information of the string. Thus, the 14 byte (0x0e)
- * length information is prefixed to the string.
- */
-#define IOT_CORE_ALPN_PROTOCOL_NAME    "\x0ex-amzn-http-ca"
 
 /* Check that transport timeout for transport send and receive is defined. */
 #ifndef TRANSPORT_SEND_RECV_TIMEOUT_MS
@@ -185,8 +177,8 @@ static int32_t connectToServer( NetworkContext_t * pNetworkContext )
     /* ALPN is required when communicating to AWS IoT Core over port 443 through HTTP. */
     if( AWS_HTTPS_PORT == 443 )
     {
-        opensslCredentials.pAlpnProtos = IOT_CORE_ALPN_PROTOCOL_NAME;
-        opensslCredentials.alpnProtosLen = strlen( IOT_CORE_ALPN_PROTOCOL_NAME );
+        opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_HTTP_CA_AUTH_OPENSSL;
+        opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL_LEN;
     }
 
     /* Initialize server information. */
@@ -349,7 +341,7 @@ int main( int argc,
     /* Return value of main. */
     int32_t returnStatus = EXIT_SUCCESS;
     /* The transport layer interface used by the HTTP Client library. */
-    TransportInterface_t transportInterface;
+    TransportInterface_t transportInterface = { NULL };
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
     OpensslParams_t opensslParams;

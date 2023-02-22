@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -755,7 +755,7 @@ int main( int argc,
         {
             for( i = 0; i < DEFENDER_RESPONSE_WAIT_SECONDS; i++ )
             {
-                ( void ) ProcessLoop( 1000 );
+                ( void ) ProcessLoopWithTimeout( 1000 );
 
                 /* reportStatus is updated in the publishCallback. */
                 if( reportStatus != ReportStatusNotReceived )

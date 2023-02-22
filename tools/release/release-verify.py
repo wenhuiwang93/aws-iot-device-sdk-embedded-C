@@ -55,7 +55,7 @@ def validate_manifest(csdk_root, csdk_version, lib_versions):
         Please see tools/release/config.yml.
     """
     with open(os.path.join(csdk_root, "manifest.yml")) as manifest_file:
-        manifest = yaml.load(manifest_file, Loader=yaml.FullLoader)
+        manifest = yaml.safe_load(manifest_file, Loader=yaml.FullLoader)
 
     # Verify the CSDK version is correct.
     manifest_version = manifest["version"]
@@ -164,7 +164,7 @@ def validate_branches(repo_paths):
     """
     for repo_path in repo_paths:
         git_resp = requests.get(f"{GITHUB_API_URL}/repos/{repo_path}/branches", headers=GITHUB_AUTH_HEADER)
-        valid_branches = ["main"]
+        valid_branches = ["main", "gh-pages", "dev"]
         if repo_path == f"{CSDK_ORG}/{CSDK_REPO}":
             valid_branches += ["v4_beta_deprecated"]
         for branch in git_resp.json():

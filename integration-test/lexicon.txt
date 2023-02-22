@@ -74,6 +74,7 @@ configlabel
 configs
 connack
 const
+coremqtt
 correclty
 cpu
 createcleansession
@@ -152,6 +153,7 @@ getfunctionlist
 getslotlist
 gf
 glibc
+globalackpacketidentifier
 gmtime
 gpl
 grp
@@ -171,6 +173,7 @@ https
 hw
 ia
 ietf
+ifdef
 ifndef
 inc
 init
@@ -226,10 +229,14 @@ milli
 min
 mis
 montgomery
+mosquitto
 mpi
 mpis
 mqtt
+mqttcallback
 mqttkeepalivetimeout
+mqttneedmorebytes
+mqttsuccess
 msvc
 msys
 mul
@@ -279,6 +286,7 @@ pkwrite
 plaintext
 pleace
 pmethod
+pmqttcontext
 pnetworkcontext
 poly
 posix
@@ -366,12 +374,17 @@ ucsecp
 udbl
 udp
 uint
+ultimeout
+ultimeoutms
 un
+undefine
 unix
+unitymalloc
 unsuback
 urandom
 uri
 usa
+uspacketidentifier
 util
 utils
 vydzcnkj

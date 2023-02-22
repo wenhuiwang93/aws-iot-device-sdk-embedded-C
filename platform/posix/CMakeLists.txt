@@ -6,7 +6,7 @@ add_library( clock_posix
                "clock_posix.c" )
 
 target_include_directories( clock_posix
-                              PRIVATE
+                              PUBLIC
                                 ${PLATFORM_DIR}/include )
 
 # Install clock abstraction as library of both static archive and shared type.
@@ -16,10 +16,6 @@ if(INSTALL_PLATFORM_ABSTRACTIONS)
       LIBRARY DESTINATION "${CSDK_LIB_INSTALL_PATH}"
       ARCHIVE DESTINATION "${CSDK_LIB_INSTALL_PATH}"
       )
-endif()
-
-if(BUILD_TESTS)
-  add_subdirectory(utest)
 endif()
 
 # Add the transport targets

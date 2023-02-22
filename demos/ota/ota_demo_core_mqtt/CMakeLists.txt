@@ -25,9 +25,11 @@ target_link_libraries(
     PRIVATE
         ${LIB_RT}
         ota_pal
-        pthread
+        Threads::Threads
         clock_posix
         openssl_posix
+        aws_iot_json
+        tinycbor
 )
 
 target_include_directories(
@@ -41,6 +43,7 @@ target_include_directories(
         ${OTA_INCLUDE_PRIVATE_DIRS}
         ${OTA_INCLUDE_OS_POSIX_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}
@@ -50,6 +53,7 @@ set_macro_definitions(TARGETS ${DEMO_NAME}
                         "CLIENT_CERT_PATH"
                         "CLIENT_PRIVATE_KEY_PATH"
                         "CLIENT_IDENTIFIER"
+                      OPTIONAL
                         "CLIENT_USERNAME"
                         "CLIENT_PASSWORD"
                         "OS_NAME"

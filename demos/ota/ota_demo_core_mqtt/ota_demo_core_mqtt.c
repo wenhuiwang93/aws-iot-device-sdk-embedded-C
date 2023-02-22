@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -63,6 +63,9 @@
 /* Include firmware version struct definition. */
 #include "ota_appversion32.h"
 
+/* AWS IoT Core TLS ALPN definitions for MQTT authentication */
+#include "aws_iot_alpn_defs.h"
+
 /**
  * These configuration settings are required to run the OTA demo which uses mutual authentication.
  * Throw compilation error if the below configs are not defined.
@@ -84,25 +87,6 @@
 #endif
 
 /**
- * @brief ALPN (Application-Layer Protocol Negotiation) protocol name for AWS IoT MQTT.
- *
- * This will be used if the AWS_MQTT_PORT is configured as 443 for AWS IoT MQTT broker.
- * Please see more details about the ALPN protocol for AWS IoT MQTT endpoint
- * in the link below.
- * https://aws.amazon.com/blogs/iot/mqtt-with-tls-client-authentication-on-port-443-why-it-is-useful-and-how-it-works/
- *
- * @note OpenSSL requires that the protocol string passed to it for configuration be encoded
- * with the prefix of 8-bit length information of the string. Thus, the 14 byte (0x0e) length
- * information is prefixed to the string.
- */
-#define AWS_IOT_MQTT_ALPN                   "\x0ex-amzn-mqtt-ca"
-
-/**
- * @brief Length of ALPN protocol name.
- */
-#define AWS_IOT_MQTT_ALPN_LENGTH            ( ( uint16_t ) ( sizeof( AWS_IOT_MQTT_ALPN ) - 1 ) )
-
-/**
  * @brief Length of MQTT server host name.
  */
 #define AWS_IOT_ENDPOINT_LENGTH             ( ( uint16_t ) ( sizeof( AWS_IOT_ENDPOINT ) - 1 ) )
@@ -115,7 +99,7 @@
 /**
  * @brief Transport timeout in milliseconds for transport send and receive.
  */
-#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 500U )
+#define TRANSPORT_SEND_RECV_TIMEOUT_MS      ( 1000U )
 
 /**
  * @brief Timeout for receiving CONNACK packet in milli seconds.
@@ -132,11 +116,6 @@
  * PINGREQ Packet.
  */
 #define MQTT_KEEP_ALIVE_INTERVAL_SECONDS    ( 60U )
-
-/**
- * @brief Timeout for MQTT_ProcessLoop function in milliseconds.
- */
-#define MQTT_PROCESS_LOOP_TIMEOUT_MS        ( 100U )
 
 /**
  * @brief Period for waiting on ack.
@@ -230,18 +209,29 @@
 /**
  * @brief The common prefix for all OTA topics.
  */
-#define OTA_TOPIC_PREFIX    "$aws/things/+/"
+#define OTA_TOPIC_PREFIX               "$aws/things/+/"
 
 /**
  * @brief The string used for jobs topics.
  */
-#define OTA_TOPIC_JOBS      "jobs"
+#define OTA_TOPIC_JOBS                 "jobs"
 
 /**
  * @brief The string used for streaming service topics.
  */
-#define OTA_TOPIC_STREAM    "streams"
+#define OTA_TOPIC_STREAM               "streams"
 
+/**
+ * @brief The length of the outgoing publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for outgoing publishes.
+ */
+#define OUTGOING_PUBLISH_RECORD_LEN    ( 10U )
+
+/**
+ * @brief The length of the incoming publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for incoming publishes.
+ */
+#define INCOMING_PUBLISH_RECORD_LEN    ( 10U )
 
 /*-----------------------------------------------------------*/
 
@@ -360,6 +350,24 @@ static OtaAppBuffer_t otaBuffer =
     .pFileBitmap        = bitmap,
     .fileBitmapSize     = OTA_MAX_BLOCK_BITMAP_SIZE
 };
+
+/**
+ * @brief Array to track the outgoing publish records for outgoing publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_LEN ];
+
+/**
+ * @brief Array to track the incoming publish records for incoming publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_LEN ];
 
 /*-----------------------------------------------------------*/
 
@@ -528,7 +536,7 @@ static uint32_t generateRandomNumber();
  * @return None.
  */
 static void otaAppCallback( OtaJobEvent_t event,
-                            const void * pData );
+                            void * pData );
 
 /**
  * @brief callback to use with the MQTT context to notify incoming packet events.
@@ -615,7 +623,7 @@ OtaEventData_t * otaEventBufferGet( void )
 /*-----------------------------------------------------------*/
 
 static void otaAppCallback( OtaJobEvent_t event,
-                            const void * pData )
+                            void * pData )
 {
     OtaErr_t err = OtaErrUninitialized;
 
@@ -876,7 +884,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     int returnStatus = EXIT_SUCCESS;
     MQTTStatus_t mqttStatus = MQTTBadParameter;
     MQTTFixedBuffer_t networkBuffer;
-    TransportInterface_t transport;
+    TransportInterface_t transport = { NULL };
 
     assert( pMqttContext != NULL );
     assert( pNetworkContext != NULL );
@@ -889,6 +897,7 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
     transport.recv = Openssl_Recv;
+    transport.writev = NULL;
 
     /* Fill the values for network buffer. */
     networkBuffer.pBuffer = otaNetworkBuffer;
@@ -904,7 +913,21 @@ static int initializeMqtt( MQTTContext_t * pMqttContext,
     if( mqttStatus != MQTTSuccess )
     {
         returnStatus = EXIT_FAILURE;
-        LogError( ( "MQTT init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        LogError( ( "MQTT_Init failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+    }
+    else
+    {
+        mqttStatus = MQTT_InitStatefulQoS( pMqttContext,
+                                           pOutgoingPublishRecords,
+                                           OUTGOING_PUBLISH_RECORD_LEN,
+                                           pIncomingPublishRecords,
+                                           INCOMING_PUBLISH_RECORD_LEN );
+
+        if( mqttStatus != MQTTSuccess )
+        {
+            returnStatus = EXIT_FAILURE;
+            LogError( ( "MQTT_InitStatefulQoS failed: Status = %s.", MQTT_Status_strerror( mqttStatus ) ) );
+        }
     }
 
     return returnStatus;
@@ -958,11 +981,11 @@ static int connectToServerWithBackoffRetries( NetworkContext_t * pNetworkContext
          * https://docs.aws.amazon.com/iot/latest/developerguide/custom-authentication.html
          */
         #ifdef CLIENT_USERNAME
-            opensslCredentials.pAlpnProtos = AWS_IOT_PASSWORD_ALPN;
-            opensslCredentials.alpnProtosLen = AWS_IOT_PASSWORD_ALPN_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_MQTT_CUSTOM_AUTH_OPENSSL;
+            opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CUSTOM_AUTH_OPENSSL_LEN;
         #else
-            opensslCredentials.pAlpnProtos = AWS_IOT_MQTT_ALPN;
-            opensslCredentials.alpnProtosLen = AWS_IOT_MQTT_ALPN_LENGTH;
+            opensslCredentials.pAlpnProtos = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL;
+            opensslCredentials.alpnProtosLen = AWS_IOT_ALPN_MQTT_CA_AUTH_OPENSSL_LEN;
         #endif
     }
 
@@ -1575,7 +1598,7 @@ static int startOTADemo( void )
                 if( pthread_mutex_lock( &mqttMutex ) == 0 )
                 {
                     /* Loop to receive packet from transport interface. */
-                    mqttStatus = MQTT_ProcessLoop( &mqttContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+                    mqttStatus = MQTT_ProcessLoop( &mqttContext );
 
                     pthread_mutex_unlock( &mqttMutex );
                 }
@@ -1586,7 +1609,7 @@ static int startOTADemo( void )
                                 strerror( errno ) ) );
                 }
 
-                if( mqttStatus == MQTTSuccess )
+                if( ( mqttStatus == MQTTSuccess ) || ( mqttStatus == MQTTNeedMoreBytes ) )
                 {
                     /* Get OTA statistics for currently executing job. */
                     OTA_GetStatistics( &otaStatistics );
@@ -1597,11 +1620,8 @@ static int startOTADemo( void )
                                otaStatistics.otaPacketsProcessed,
                                otaStatistics.otaPacketsDropped ) );
 
-                    /* Delay if mqtt process loop is set to zero.*/
-                    if( MQTT_PROCESS_LOOP_TIMEOUT_MS > 0 )
-                    {
-                        Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
-                    }
+                    /* Delay to allow data to buffer for MQTT_ProcessLoop. */
+                    Clock_SleepMs( OTA_EXAMPLE_LOOP_SLEEP_PERIOD_MS );
                 }
                 else
                 {
@@ -1645,7 +1665,7 @@ static int startOTADemo( void )
         {
             LogError( ( "Failed to join thread"
                         ",error code = %d",
-                        returnStatus ) );
+                        returnJoin ) );
 
             returnStatus = EXIT_FAILURE;
         }

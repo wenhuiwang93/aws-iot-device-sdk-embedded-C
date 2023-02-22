@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -50,6 +50,7 @@
 
 /* Standard includes. */
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -59,9 +60,6 @@
 
 /* Demo config. */
 #include "demo_config.h"
-
-/* TinyCBOR library for CBOR encoding and decoding operations. */
-#include "cbor.h"
 
 /* corePKCS11 includes. */
 #include "core_pkcs11.h"
@@ -233,6 +231,7 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 {
     FleetProvisioningStatus_t status;
     FleetProvisioningTopic_t api;
+    const char * cborDump;
 
     /* Silence compiler warnings about unused variables. */
     ( void ) packetIdentifier;
@@ -252,6 +251,10 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         {
             LogInfo( ( "Received accepted response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
+            cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            LogDebug( ( "Payload: %s", cborDump ) );
+            free( ( void * ) cborDump );
+
             responseStatus = ResponseAccepted;
 
             /* Copy the payload from the MQTT library's buffer to #payloadBuffer. */
@@ -265,11 +268,19 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
         {
             LogError( ( "Received rejected response from Fleet Provisioning CreateCertificateFromCsr API." ) );
 
+            cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            LogError( ( "Payload: %s", cborDump ) );
+            free( ( void * ) cborDump );
+
             responseStatus = ResponseRejected;
         }
         else if( api == FleetProvCborRegisterThingAccepted )
         {
             LogInfo( ( "Received accepted response from Fleet Provisioning RegisterThing API." ) );
+
+            cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            LogDebug( ( "Payload: %s", cborDump ) );
+            free( ( void * ) cborDump );
 
             responseStatus = ResponseAccepted;
 
@@ -280,9 +291,13 @@ static void provisioningPublishCallback( MQTTPublishInfo_t * pPublishInfo,
 
             payloadLength = pPublishInfo->payloadLength;
         }
-        else if( api == FleetProvCborCreateCertFromCsrRejected )
+        else if( api == FleetProvCborRegisterThingRejected )
         {
             LogError( ( "Received rejected response from Fleet Provisioning RegisterThing API." ) );
+
+            cborDump = getStringFromCbor( ( const uint8_t * ) pPublishInfo->pPayload, pPublishInfo->payloadLength );
+            LogError( ( "Payload: %s", cborDump ) );
+            free( ( void * ) cborDump );
 
             responseStatus = ResponseRejected;
         }
@@ -303,7 +318,7 @@ static bool waitForResponse( void )
     responseStatus = ResponseNotReceived;
 
     /* responseStatus is updated from the MQTT publish callback. */
-    ( void ) ProcessLoop();
+    ( void ) ProcessLoopWithTimeout();
 
     if( responseStatus == ResponseNotReceived )
     {

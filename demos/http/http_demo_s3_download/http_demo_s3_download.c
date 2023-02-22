@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -58,14 +58,9 @@
     #error "Please define the HTTPS_PORT macro in demo_config.h ."
 #endif
 
-/* Check that a path for Root CA Certificate is defined for AWS IOT CREDENTIAL PROVIDER SERVICE. */
-#ifndef AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH
-    #error "Please define thr AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH macro in demo_config.h."
-#endif
-
-/* Check that a path for Root CA Certificate is defined for AWS S3 Service. */
-#ifndef AWS_S3_ROOT_CA_CERT_PATH
-    #error "Please define the AWS_S3_ROOT_CA_CERT_PATH macro for AWS S3 ROOT CA certificate in demo_config.h."
+/* Check that a path for Root CA Certificate is defined. */
+#ifndef ROOT_CA_CERT_PATH
+    #error "Please define the ROOT_CA_CERT_PATH macro in demo_config.h."
 #endif
 
 /* Check that transport timeout for transport send and receive is defined. */
@@ -187,7 +182,7 @@
 /**
  * @brief HTTP header name for specifying the IOT Thing resource name in request to AWS S3.
  */
-#define AWS_IOT_THING_NAME_HEADER_FIELD               "x-amz-iot-thing-name"
+#define AWS_IOT_THING_NAME_HEADER_FIELD               "x-amzn-iot-thingname"
 
 /**
  * @brief Field name of the HTTP date header to read from the AWS IOT credential provider server response.
@@ -539,9 +534,9 @@ static SigV4Parameters_t sigv4Params =
     .pCredentials     = &sigvCreds,
     .pDateIso8601     = pDateISO8601,
     .pRegion          = AWS_S3_BUCKET_REGION,
-    .regionLen        = strlen( AWS_S3_BUCKET_REGION ),
+    .regionLen        = sizeof( AWS_S3_BUCKET_REGION ) - 1,
     .pService         = AWS_S3_SERVICE_NAME,
-    .serviceLen       = strlen( AWS_S3_SERVICE_NAME ),
+    .serviceLen       = sizeof( AWS_S3_SERVICE_NAME ) - 1,
     .pCryptoInterface = &cryptoInterface,
     .pHttpParameters  = NULL
 };
@@ -894,7 +889,7 @@ static int32_t connectToIotServer( NetworkContext_t * pNetworkContext )
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = AWS_IOT_CRED_PROVIDER_ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
         opensslCredentials.pClientCertPath = CLIENT_CERT_PATH;
         opensslCredentials.pPrivateKeyPath = CLIENT_PRIVATE_KEY_PATH;
@@ -947,7 +942,7 @@ static int32_t connectToS3Server( NetworkContext_t * pNetworkContext )
         serverHost[ serverHostLength ] = '\0';
 
         /* Initialize TLS credentials. */
-        opensslCredentials.pRootCaPath = AWS_S3_ROOT_CA_CERT_PATH;
+        opensslCredentials.pRootCaPath = ROOT_CA_CERT_PATH;
         opensslCredentials.sniHostName = serverHost;
 
         /* Initialize server information. */
@@ -1561,7 +1556,7 @@ int main( int argc,
     int demoRunCount = 0;
 
     /* The transport layer interface used by the HTTP Client library. */
-    TransportInterface_t transportInterface;
+    TransportInterface_t transportInterface = { NULL };
     /* The network context for the transport layer interface. */
     NetworkContext_t networkContext;
     OpensslParams_t opensslParams;

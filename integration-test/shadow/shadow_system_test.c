@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -142,6 +142,18 @@
  */
 #define TEST_SHADOW_DESIRED_LENGTH          ( sizeof( TEST_SHADOW_DESIRED ) - 1 )
 
+/**
+ * @brief The length of the outgoing publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for outgoing publishes.
+ */
+#define OUTGOING_PUBLISH_RECORD_LEN         ( 10U )
+
+/**
+ * @brief The length of the incoming publish records array used by the coreMQTT
+ * library to track QoS > 0 packet ACKS for incoming publishes.
+ */
+#define INCOMING_PUBLISH_RECORD_LEN         ( 10U )
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -282,6 +294,24 @@ static char topicString[ SHADOW_TOPIC_LEN_MAX( SHADOW_THINGNAME_LENGTH_MAX, SHAD
  */
 static char expectedShadowNameString[ SHADOW_NAME_LENGTH_MAX ];
 
+/**
+ * @brief Array to track the outgoing publish records for outgoing publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pOutgoingPublishRecords[ OUTGOING_PUBLISH_RECORD_LEN ];
+
+/**
+ * @brief Array to track the incoming publish records for incoming publishes
+ * with QoS > 0.
+ *
+ * This is passed into #MQTT_InitStatefulQoS to allow for QoS > 0.
+ *
+ */
+static MQTTPubAckInfo_t pIncomingPublishRecords[ INCOMING_PUBLISH_RECORD_LEN ];
+
 /* Each compilation unit must define the NetworkContext struct. */
 struct NetworkContext
 {
@@ -316,6 +346,19 @@ static void eventCallback( MQTTContext_t * pContext,
                            MQTTPacketInfo_t * pPacketInfo,
                            MQTTDeserializedInfo_t * pDeserializedInfo );
 
+/**
+ * @brief Call #MQTT_ProcessLoop in a loop for the duration of a timeout or
+ * #MQTT_ProcessLoop returns a failure.
+ *
+ * @param[in] pMqttContext MQTT context pointer.
+ * @param[in] ulTimeoutMs Duration to call #MQTT_ProcessLoop for.
+ *
+ * @return Returns the return value of the last call to #MQTT_ProcessLoop unless
+ * the last call returned MQTTNeedMoreBytes -in that case it returns MQTTSuccess.
+ */
+static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
+                                            uint32_t ulTimeoutMs );
+
 /*-----------------------------------------------------------*/
 
 static void establishMqttSession( MQTTContext_t * pContext,
@@ -324,7 +367,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                   bool * pSessionPresent )
 {
     MQTTConnectInfo_t connectInfo;
-    TransportInterface_t transport;
+    TransportInterface_t transport = { NULL };
     MQTTFixedBuffer_t networkBuffer;
 
     assert( pContext != NULL );
@@ -337,6 +380,7 @@ static void establishMqttSession( MQTTContext_t * pContext,
     transport.pNetworkContext = pNetworkContext;
     transport.send = Openssl_Send;
     transport.recv = Openssl_Recv;
+    transport.writev = NULL;
 
     /* Fill the values for network buffer. */
     networkBuffer.pBuffer = buffer;
@@ -348,6 +392,12 @@ static void establishMqttSession( MQTTContext_t * pContext,
                                                Clock_GetTimeMs,
                                                eventCallback,
                                                &networkBuffer ) );
+
+    TEST_ASSERT_EQUAL( MQTTSuccess, MQTT_InitStatefulQoS( pContext,
+                                                          pOutgoingPublishRecords,
+                                                          OUTGOING_PUBLISH_RECORD_LEN,
+                                                          pIncomingPublishRecords,
+                                                          INCOMING_PUBLISH_RECORD_LEN ) );
 
     /* Establish MQTT session with a CONNECT packet. */
 
@@ -592,7 +642,7 @@ static MQTTStatus_t subscribeToTopic( MQTTContext_t * pContext,
 
     if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = processLoopWithTimeout( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     if( mqttStatus == MQTTSuccess )
@@ -635,7 +685,7 @@ static MQTTStatus_t unsubscribeFromTopic( MQTTContext_t * pContext,
 
     if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = processLoopWithTimeout( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     if( mqttStatus == MQTTSuccess )
@@ -676,7 +726,7 @@ static MQTTStatus_t publishToTopic( MQTTContext_t * pContext,
 
     if( mqttStatus == MQTTSuccess )
     {
-        mqttStatus = MQTT_ProcessLoop( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
+        mqttStatus = processLoopWithTimeout( pContext, MQTT_PROCESS_LOOP_TIMEOUT_MS );
     }
 
     if( mqttStatus == MQTTSuccess )
@@ -828,6 +878,34 @@ static void testSequence( const char * pShadowName,
                                                           topicString,
                                                           topicLength,
                                                           MQTTQoS0 ) );
+}
+
+static MQTTStatus_t processLoopWithTimeout( MQTTContext_t * pMqttContext,
+                                            uint32_t ulTimeoutMs )
+{
+    uint32_t ulMqttProcessLoopTimeoutTime;
+    uint32_t ulCurrentTime;
+
+    MQTTStatus_t eMqttStatus = MQTTSuccess;
+
+    ulCurrentTime = pMqttContext->getTime();
+    ulMqttProcessLoopTimeoutTime = ulCurrentTime + ulTimeoutMs;
+
+    /* Call MQTT_ProcessLoop multiple times a timeout happens, or
+     * MQTT_ProcessLoop fails. */
+    while( ( ulCurrentTime < ulMqttProcessLoopTimeoutTime ) &&
+           ( eMqttStatus == MQTTSuccess || eMqttStatus == MQTTNeedMoreBytes ) )
+    {
+        eMqttStatus = MQTT_ProcessLoop( pMqttContext );
+        ulCurrentTime = pMqttContext->getTime();
+    }
+
+    if( eMqttStatus == MQTTNeedMoreBytes )
+    {
+        eMqttStatus = MQTTSuccess;
+    }
+
+    return eMqttStatus;
 }
 
 /* ============================   UNITY FIXTURES ============================ */

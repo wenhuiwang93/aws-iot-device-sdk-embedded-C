@@ -8,12 +8,19 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/coreHTTP/httpFilePaths.cmake )
 # Include backoffAlgorithm library file path configuration.
 include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorithmFilePaths.cmake )
 
+# Disable some warnings for llhttp sources.
+set_source_files_properties(
+    ${HTTP_SOURCES}
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-unused-parameter"
+)
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
         "${DEMO_NAME}.c"
         "${DEMOS_DIR}/ota/common/src/mqtt_subscription_manager.c"
-        "${DEMOS_DIR}/ota/common/src/http_demo_utils.c"
+        "${DEMOS_DIR}/http/common/src/http_demo_url_utils.c"
         ${OTA_SOURCES}
         ${OTA_OS_POSIX_SOURCES}
         ${OTA_MQTT_SOURCES}
@@ -29,15 +36,18 @@ target_link_libraries(
     PRIVATE
         ${LIB_RT}
         ota_pal
-        pthread
+        Threads::Threads
         clock_posix
         openssl_posix
+        aws_iot_json
+        tinycbor
 )
 
 target_include_directories(
     ${DEMO_NAME}
     PUBLIC
         "${DEMOS_DIR}/ota/common/include"
+        "${DEMOS_DIR}/http/common/include"
         "${CMAKE_CURRENT_LIST_DIR}"
         "${LOGGING_INCLUDE_DIRS}"
         ${BACKOFF_ALGORITHM_INCLUDE_PUBLIC_DIRS}
@@ -46,6 +56,7 @@ target_include_directories(
         ${OTA_INCLUDE_OS_POSIX_DIRS}
         ${MQTT_INCLUDE_PUBLIC_DIRS}
         ${HTTP_INCLUDE_PUBLIC_DIRS}
+        ${AWS_DEMO_INCLUDE_DIRS}
 )
 
 set_macro_definitions(TARGETS ${DEMO_NAME}

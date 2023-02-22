@@ -10,6 +10,13 @@ include( ${CMAKE_SOURCE_DIR}/libraries/standard/backoffAlgorithm/backoffAlgorith
 file( GLOB DEMO_FILE "${DEMO_NAME}.c*" )
 file( GLOB DEMO_UTILS "${DEMOS_DIR}/http/common/src/*.c*" )
 
+# Disable some warnings for llhttp sources.
+set_source_files_properties(
+    ${HTTP_SOURCES}
+    PROPERTIES
+    COMPILE_FLAGS "-Wno-unused-parameter"
+)
+
 # Demo target.
 add_executable(
     ${DEMO_NAME}
@@ -25,7 +32,7 @@ target_link_libraries(
     PRIVATE
         clock_posix
         openssl_posix
-        rt
+        ${LIB_RT}
 )
 
 target_include_directories(

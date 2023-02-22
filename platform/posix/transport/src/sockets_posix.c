@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -367,8 +367,15 @@ SocketStatus_t Sockets_Connect( int32_t * pTcpSocket,
 
         if( setTimeoutStatus < 0 )
         {
-            LogError( ( "Setting socket send timeout failed." ) );
-            returnStatus = retrieveError( errno );
+            if( errno == ENOPROTOOPT )
+            {
+                LogInfo( ( "Setting socket send timeout skipped." ) );
+            }
+            else
+            {
+                LogError( ( "Setting socket send timeout failed." ) );
+                returnStatus = retrieveError( errno );
+            }
         }
     }
 
@@ -386,8 +393,15 @@ SocketStatus_t Sockets_Connect( int32_t * pTcpSocket,
 
         if( setTimeoutStatus < 0 )
         {
-            LogError( ( "Setting socket receive timeout failed." ) );
-            returnStatus = retrieveError( errno );
+            if( errno == ENOPROTOOPT )
+            {
+                LogInfo( ( "Setting socket receive timeout skipped." ) );
+            }
+            else
+            {
+                LogError( ( "Setting socket receive timeout failed." ) );
+                returnStatus = retrieveError( errno );
+            }
         }
     }
 

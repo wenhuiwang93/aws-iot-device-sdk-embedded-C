@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -952,8 +952,7 @@ void on_message( struct mosquitto * m,
             }
             else
             {
-                jobid[ jobidLength ] = '\0';
-                warnx( "update failure for unknown job id: %s", jobid );
+                warnx( "update failure for unknown job id: %.*s", jobidLength, jobid );
             }
 
             break;

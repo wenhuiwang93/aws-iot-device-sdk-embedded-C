@@ -1,5 +1,5 @@
 /*
- * AWS IoT Device SDK for Embedded C 202108.00
+ * AWS IoT Device SDK for Embedded C 202211.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -20,8 +20,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _HTTP_UTILS_H_
-#define _HTTP_UTILS_H_
+#ifndef HTTP_DEMO_URL_UTILS_H_
+#define HTTP_DEMO_URL_UTILS_H_
+
+/* Standard includes. */
+#include <stdlib.h>
+#include <stdbool.h>
+
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    extern "C" {
+#endif
+/* *INDENT-ON* */
 
 /* HTTP API header. */
 #include "core_http_client.h"
@@ -86,4 +96,10 @@ HTTPStatus_t getUrlAddress( const char * pUrl,
                             const char ** pAddress,
                             size_t * pAddressLen );
 
-#endif /* ifndef _HTTP_UTILS_H_ */
+/* *INDENT-OFF* */
+#ifdef __cplusplus
+    }
+#endif
+/* *INDENT-ON* */
+
+#endif /* ifndef HTTP_DEMO_URL_UTILS_H_ */
